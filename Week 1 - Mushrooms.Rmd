@@ -1,0 +1,172 @@
+---
+title: "Mushrooms Dataset"
+author: "Mia Chen"
+date: "February 2, 2019"
+output: html_document
+---
+#Mushrooms analysis: edible or poisonous?
+
+
+Packages used:
+```{r}
+library(ggplot2)
+```
+
+###Read data into R
+Read mushrooms csv file from github raw file:
+```{r}
+mushrooms <- read.csv(file = "https://raw.githubusercontent.com/miachen410/Mushrooms/master/mushrooms.csv", header = FALSE) 
+# Data doesn't have column names, so header is set to FALSE to avoid reading first row as headers
+```
+
+###Prepare data for analysis
+Assign column names to mushrooms data frame:
+```{r}
+names(mushrooms) <- c("edibility", "cap-shape", "cap-surface", "cap-color", "bruises", "odor", "gill-attachment", "gill-spacing", "gill-size", "gill-color", "stalk-shape", "stalk-root", "stalk-surface-above-ring", "stalk-surface-below-ring", "stalk-color-above-ring", "stalk-color-below-ring", "veil-type", "veil-color", "ring-number", "ring-type", "spore-print-color", "population", "habitat")
+```
+
+Change first column name from "edibility"" to "class":
+```{r}
+names(mushrooms)[names(mushrooms)=="edibility"] <- "class"
+```
+
+Look at the first 6 rows of the data using head() function:
+```{r}
+head(mushrooms)
+```
+
+Look at the structure of the variables using str() function:
+```{r}
+str(mushrooms)
+```
+
+Look at a brief summary of the dataset: how are data distributed in each category?
+```{r}
+summary(mushrooms)
+```
+
+Replace abbreviations with full terms for all values using gsub(): edible=e, poisonous=p
+Assign to corresponding column in data frame:
+```{r}
+mushrooms$class <- gsub("e", "edible", mushrooms$class)
+mushrooms$class <- gsub("p", "poisonous", mushrooms$class)
+```
+
+#Question: What attributes are best predictors of whether a particular mushroom is poisonous or edible?
+
+Let's look at some traits of edible mushrooms:
+```{r}
+edible <- subset(mushrooms, class == "edible")
+```
+```{r}
+summary(edible)
+```
+
+Then look at traits of poisonous mushrooms and compare those with edible mushrooms:
+```{r}
+poisonous <- subset(mushrooms, class == "poisonous")
+```
+```{r}
+summary(poisonous)
+```
+
+#Question: Which traits seem to have distinctive differences between edible and poisonous mushrooms?
+
+
+###Observation: odor, spore-print-color and population show greater distinctions between edible and poisonous mushrooms.
+
+###Replace abbreviations by full terms:
+odor: almond=a,anise=l,creosote=c,fishy=y,foul=f,musty=m,none=n,pungent=p,spicy=s
+```{r}
+mushrooms$odor <- gsub("^a$", "almond", mushrooms$odor)
+mushrooms$odor <- gsub("^l$", "anise", mushrooms$odor)
+mushrooms$odor <- gsub("^c$", "creosote", mushrooms$odor)
+mushrooms$odor <- gsub("^y$", "fishy", mushrooms$odor)
+mushrooms$odor <- gsub("^f$", "foul", mushrooms$odor)
+mushrooms$odor <- gsub("^m$", "musty", mushrooms$odor)
+mushrooms$odor <- gsub("^n$", "none", mushrooms$odor)
+mushrooms$odor <- gsub("^p$", "pungent", mushrooms$odor)
+mushrooms$odor <- gsub("^s$", "spicy", mushrooms$odor)
+```
+
+spore-print-color: black=k,brown=n,buff=b,chocolate=h,green=r,orange=o,purple=u,white=w,yellow=y
+```{r}
+mushrooms$'spore-print-color' <- gsub("^k$", "black", mushrooms$'spore-print-color')
+mushrooms$'spore-print-color' <- gsub("^n$", "brown", mushrooms$'spore-print-color')
+mushrooms$'spore-print-color' <- gsub("^b$", "buff", mushrooms$'spore-print-color')
+mushrooms$'spore-print-color' <- gsub("^h$", "chocolate", mushrooms$'spore-print-color')
+mushrooms$'spore-print-color' <- gsub("^r$", "green", mushrooms$'spore-print-color')
+mushrooms$'spore-print-color' <- gsub("^o$", "orange", mushrooms$'spore-print-color')
+mushrooms$'spore-print-color' <- gsub("^u$", "purple", mushrooms$'spore-print-color')
+mushrooms$'spore-print-color' <- gsub("^w$", "white", mushrooms$'spore-print-color')
+mushrooms$'spore-print-color' <- gsub("^y$", "yellow", mushrooms$'spore-print-color')
+```
+
+population: abundant=a,clustered=c,numerous=n,scattered=s,several=v,solitary=y
+```{r}
+mushrooms$population <- gsub("^a$", "abundant", mushrooms$population)
+mushrooms$population <- gsub("^c$", "clustered", mushrooms$population)
+mushrooms$population <- gsub("^n$", "numerous", mushrooms$population)
+mushrooms$population <- gsub("^s$", "scattered", mushrooms$population)
+mushrooms$population <- gsub("^v$", "several", mushrooms$population)
+mushrooms$population <- gsub("^y$", "solitary", mushrooms$population)
+```
+
+Create a subset containing only "class", "odor", "spore-print-color" and "population" for analysis:
+```{r}
+analysis <- subset(mushrooms, select = c("class", "odor", "spore-print-color", "population"))
+```
+
+```{r}
+summary(analysis)
+str(analysis)
+```
+
+Change variable types to factor:
+```{r}
+analysis$class <- as.factor(analysis$class)
+analysis$odor <- as.factor(analysis$odor)
+analysis$'spore-print-color' <- as.factor(analysis$'spore-print-color')
+analysis$population <- as.factor(analysis$population)
+```
+
+```{r}
+summary(analysis)
+```
+
+###Create data visualizations to see relationships between data:
+```{r}
+odor <- subset(analysis, select = c("class", "odor"))
+a <- ggplot(odor, aes(x = odor, color = class, fill = class)) + geom_bar(position = "stack")
+a
+```
+
+###Edible - almond, anise, mostly odorless
+###Poisonous - creosote, fishy, foul, musty, pungent, spicy, sometimes no odor
+
+```{r}
+spore <- subset(analysis, select = c("class", "spore-print-color"))
+b <- ggplot(spore, aes(x = `spore-print-color`, color = class, fill = class)) + geom_bar(position = "stack")
+b
+```
+
+###Edible - mostly black, mostly brown, buff, orange, purple, yellow
+###Poisonous - green, mostly chocolate, mostly white
+
+```{r}
+population <- subset(analysis, select = c("class", "population"))
+c <- ggplot(population, aes(x = population, color = class, fill = class)) + geom_bar(position = "stack")
+c
+```
+
+###Edible - abundant, numerous, mostly clustered, mostly scattered, mostly solitary
+###Poisonous - mostly several, sometimes scattered, sometimes solitary
+
+
+
+#Conclusion:
+##"How to predict if a mushroom is edible?"
+###   1)If the mushroom smells like almond, anise, or odorless;
+###   2)If its spore print color is either black or brown;
+###   3)If its population is abundant, clustered, numerous, scattered or solitary;
+###Then the mushroom is most likely edible!
